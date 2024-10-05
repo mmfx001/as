@@ -65,10 +65,14 @@ app.get('/users/:id', async (req, res) => {
 
 // Route to create a new user
 app.post('/users', async (req, res) => {
-    const user = new User({
-        id: req.body.id,
-        email: req.body.email,
-    });
+    console.log('Received data:', req.body); // Log incoming data
+    const { id, email } = req.body; // Destructure id and email
+    
+    if (!id || !email) {
+        return res.status(400).json({ message: 'ID and email are required' });
+    }
+
+    const user = new User({ id, email });
 
     try {
         const newUser = await user.save();
