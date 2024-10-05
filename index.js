@@ -34,6 +34,7 @@ mongoose.connect(uri)
 const userSchema = new mongoose.Schema({
     id: { type: String, required: true }, // 'id' field
     email: { type: String, required: true }, // 'email' field
+    password: { type: String, required: true }, // 'password' field
 });
 
 const User = mongoose.model('User', userSchema);
@@ -65,14 +66,15 @@ app.get('/users/:id', async (req, res) => {
 
 // Route to create a new user
 app.post('/users', async (req, res) => {
-    console.log('Received data:', req.body); // Log incoming data
-    const { id, email } = req.body; // Destructure id and email
+    const { id, email, password } = req.body;
     
-    if (!id || !email) {
-        return res.status(400).json({ message: 'ID and email are required' });
+    if (!id || !email || !password) {
+        return res.status(400).json({ message: 'ID, email, and password are required' });
     }
 
-    const user = new User({ id, email });
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = new User({ id, email, password: hashedPassword });
 
     try {
         const newUser = await user.save();
@@ -91,9 +93,12 @@ app.put('/users/:id', async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Update email if provided
+        // Update email and password if provided
         if (req.body.email != null) {
             user.email = req.body.email;
+        }
+        if (req.body.password != null) {
+            user.password = req.body.password;
         }
 
         const updatedUser = await user.save();
