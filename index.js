@@ -1,12 +1,11 @@
+// Importing required modules
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 
-
-
+// Initialize Express app
 const app = express();
-const port = process.env.PORT || 8000;
+const port = 5001; // Portni to'g'ridan-to'g'ri kodda belgilash
 
 // Middleware to parse JSON
 app.use(express.json());
@@ -14,27 +13,27 @@ app.use(express.json());
 // CORS middleware
 app.use(cors());
 
-// MongoDB ulanish URI'si
-const uri ='MONGODB_URI=mongodb+srv://dilbekshermatov:QoklC71bxcym5GKS@cluster0.qngbf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0PORT=5001';
+// MongoDB connection URI
+const uri = 'mongodb+srv://dilbekshermatov:QoklC71bxcym5GKS@cluster0.qngbf.mongodb.net/?retryWrites=true&w=majority';
 
 if (!uri) {
-    console.error('Error: MONGODB_URI is not defined in the environment variables.');
-    process.exit(1); // Jarayonni to‘xtatish
+    console.error('Error: MONGODB_URI is not defined.');
+    process.exit(1); // Terminate the process if no URI is provided
 }
 
-// Mongoose orqali MongoDB'ga ulanish
+// Connect to MongoDB using Mongoose
 mongoose.connect(uri)
     .then(() => {
-        console.log('MongoDB ga muvaffaqiyatli ulandi');
+        console.log('Connected to MongoDB successfully');
     })
     .catch((error) => {
-        console.error('MongoDB ga ulanishda xatolik yuz berdi:', error);
+        console.error('Error connecting to MongoDB:', error);
     });
 
-// Foydalanuvchi schema va model
+// Define User schema and model
 const userSchema = new mongoose.Schema({
-    id: { type: String, required: true }, // 'id' maydoni
-    email: { type: String, required: true }, // 'email' maydoni
+    id: { type: String, required: true }, // 'id' field
+    email: { type: String, required: true }, // 'email' field
 });
 
 const User = mongoose.model('User', userSchema);
@@ -45,6 +44,7 @@ app.get('/users', async (req, res) => {
         const users = await User.find();
         res.json(users);
     } catch (error) {
+        console.error('Error fetching users:', error);
         res.status(500).json({ message: error.message });
     }
 });
@@ -54,10 +54,11 @@ app.get('/users/:id', async (req, res) => {
     try {
         const user = await User.findOne({ id: req.params.id });
         if (user == null) {
-            return res.status(404).json({ message: 'User topilmadi' });
+            return res.status(404).json({ message: 'User not found' });
         }
         res.json(user);
     } catch (error) {
+        console.error('Error fetching user:', error);
         res.status(500).json({ message: error.message });
     }
 });
@@ -73,6 +74,7 @@ app.post('/users', async (req, res) => {
         const newUser = await user.save();
         res.status(201).json(newUser);
     } catch (error) {
+        console.error('Error creating user:', error);
         res.status(400).json({ message: error.message });
     }
 });
@@ -82,9 +84,10 @@ app.put('/users/:id', async (req, res) => {
     try {
         const user = await User.findOne({ id: req.params.id });
         if (user == null) {
-            return res.status(404).json({ message: 'User topilmadi' });
+            return res.status(404).json({ message: 'User not found' });
         }
 
+        // Update email if provided
         if (req.body.email != null) {
             user.email = req.body.email;
         }
@@ -92,6 +95,7 @@ app.put('/users/:id', async (req, res) => {
         const updatedUser = await user.save();
         res.json(updatedUser);
     } catch (error) {
+        console.error('Error updating user:', error);
         res.status(400).json({ message: error.message });
     }
 });
@@ -101,17 +105,18 @@ app.delete('/users/:id', async (req, res) => {
     try {
         const user = await User.findOne({ id: req.params.id });
         if (user == null) {
-            return res.status(404).json({ message: 'User topilmadi' });
+            return res.status(404).json({ message: 'User not found' });
         }
 
         await user.remove();
-        res.json({ message: 'Foydalanuvchi o‘chirildi' });
+        res.json({ message: 'User deleted' });
     } catch (error) {
+        console.error('Error deleting user:', error);
         res.status(500).json({ message: error.message });
     }
 });
 
-// Express serverini ishga tushurish
+// Start the Express server
 app.listen(port, () => {
-    console.log(`Server ${port} portda ishlamoqda`);
+    console.log(`Server is running on port ${port}`);
 });
