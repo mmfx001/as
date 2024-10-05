@@ -1,7 +1,9 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import express from 'express';
+import cors from 'cors';
 
+// .env faylini yuklash
 dotenv.config();
 
 const app = express();
@@ -9,6 +11,9 @@ const port = process.env.PORT || 8000;
 
 // Middleware to parse JSON
 app.use(express.json());
+
+// CORS middleware
+app.use(cors());
 
 // MongoDB ulanish URI'si
 const uri = process.env.MONGODB_URI;
