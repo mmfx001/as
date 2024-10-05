@@ -3,8 +3,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 
-// .env faylini yuklash
-dotenv.config();
+
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -16,7 +15,7 @@ app.use(express.json());
 app.use(cors());
 
 // MongoDB ulanish URI'si
-const uri = process.env.MONGODB_URI;
+const uri ='MONGODB_URI=mongodb+srv://dilbekshermatov:QoklC71bxcym5GKS@cluster0.qngbf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0PORT=5001';
 
 if (!uri) {
     console.error('Error: MONGODB_URI is not defined in the environment variables.');
@@ -34,15 +33,14 @@ mongoose.connect(uri)
 
 // Foydalanuvchi schema va model
 const userSchema = new mongoose.Schema({
-    name: String,
-    email: String,
-    age: Number
+    id: { type: String, required: true }, // 'id' maydoni
+    email: { type: String, required: true }, // 'email' maydoni
 });
 
 const User = mongoose.model('User', userSchema);
 
 // Route to get all users
-app.get('/User', async (req, res) => {
+app.get('/users', async (req, res) => {
     try {
         const users = await User.find();
         res.json(users);
@@ -52,9 +50,9 @@ app.get('/User', async (req, res) => {
 });
 
 // Route to get a specific user by ID
-app.get('/User/:id', async (req, res) => {
+app.get('/users/:id', async (req, res) => {
     try {
-        const user = await User.findById(req.params.id);
+        const user = await User.findOne({ id: req.params.id });
         if (user == null) {
             return res.status(404).json({ message: 'User topilmadi' });
         }
@@ -65,11 +63,10 @@ app.get('/User/:id', async (req, res) => {
 });
 
 // Route to create a new user
-app.post('/User', async (req, res) => {
+app.post('/users', async (req, res) => {
     const user = new User({
-        name: req.body.name,
+        id: req.body.id,
         email: req.body.email,
-        age: req.body.age
     });
 
     try {
@@ -81,21 +78,15 @@ app.post('/User', async (req, res) => {
 });
 
 // Route to update a user
-app.put('/User/:id', async (req, res) => {
+app.put('/users/:id', async (req, res) => {
     try {
-        const user = await User.findById(req.params.id);
+        const user = await User.findOne({ id: req.params.id });
         if (user == null) {
             return res.status(404).json({ message: 'User topilmadi' });
         }
 
-        if (req.body.name != null) {
-            user.name = req.body.name;
-        }
         if (req.body.email != null) {
             user.email = req.body.email;
-        }
-        if (req.body.age != null) {
-            user.age = req.body.age;
         }
 
         const updatedUser = await user.save();
@@ -106,9 +97,9 @@ app.put('/User/:id', async (req, res) => {
 });
 
 // Route to delete a user
-app.delete('/User/:id', async (req, res) => {
+app.delete('/users/:id', async (req, res) => {
     try {
-        const user = await User.findById(req.params.id);
+        const user = await User.findOne({ id: req.params.id });
         if (user == null) {
             return res.status(404).json({ message: 'User topilmadi' });
         }
